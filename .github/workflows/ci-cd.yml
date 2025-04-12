@@ -1,0 +1,23 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+        - "main"
+  workflow_dispatch:
+
+jobs:
+  call-build-and-test:
+    uses: ./.github/workflows/build-test.yml
+
+  call-publish:
+    uses: ./.github/workflows/publish-ghcr.yml
+
+    permissions:
+      packages: write
+      contents: read
+      attestations: write
+      id-token: write
+
+    needs:
+    - call-build-and-test
