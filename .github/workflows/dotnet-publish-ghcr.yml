@@ -37,7 +37,7 @@ jobs:
     - name: Publish and push the container image
       run: |
         cd my-cinebook.ApiService/
-        dotnet publish --os linux --arch x64 -c Release /p:PublishProfile=ghcr.io
+        dotnet publish --os linux --arch x64 -c Release /p:PublishProfile=ghcr.io.pubxml
 
   deploy:
     name: deploy
