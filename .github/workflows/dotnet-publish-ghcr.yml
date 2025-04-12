@@ -37,3 +37,26 @@ jobs:
     - name: Publish and push the container image
       run: |
         dotnet publish --os linux --arch x64 -c Release /p:PublishProfile=ghcr.io
+
+  deploy:
+    name: deploy
+
+    runs-on: ubuntu-latest
+
+    needs:
+    - call-build-and-test
+    - publish
+    
+    steps:
+    - name: Tailscale
+      uses: tailscale/github-action@v3
+      with:
+        oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+        oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+        tags: tag:ci
+        version: latest
+        use-cache: 'true'
+    
+    - name: Hit deploy webhook
+      run:
+        url -X --fail POST https://portainer.tail10187.ts.net/api/stacks/webhooks/d37c0698-6154-4ab3-9e87-7b11aa7e4b86
