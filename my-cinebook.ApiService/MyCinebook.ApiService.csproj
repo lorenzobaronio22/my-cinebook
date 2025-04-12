@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\my-cinebook.ServiceDefaults\my-cinebook.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\my-cinebook.ServiceDefaults\MyCinebook.ServiceDefaults.csproj" />
   </ItemGroup>
 
   <ItemGroup>
