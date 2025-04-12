@@ -5,9 +5,12 @@ name: .NET build and test
 
 on:
   push:
-    branches: [ "!main" ]
+    branches:
+        - "*"
+        - "!main"
   pull_request:
-    branches: [ "main" ]
+    branches:
+        - "main"
   workflow_call:
   workflow_dispatch:
 
