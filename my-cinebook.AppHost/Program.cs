@@ -1,7 +1,9 @@
+using MyCinebook.AppHost;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
-var apiService = builder.AddProject<Projects.my_cinebook_ApiService>("apiservice")
+var apiService = builder.AddProject<Projects.MyCinebook_ApiService>("apiservice")
     .WithHttpsHealthCheck("/health")
-    .WithExternalHttpEndpoints();
+    .WithScalar();
 
 builder.Build().Run();
