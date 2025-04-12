@@ -13,6 +13,7 @@ on:
 
 jobs:
   build:
+    name: dotnet build and test
 
     runs-on: ubuntu-latest
 
