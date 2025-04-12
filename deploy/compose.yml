@@ -1,0 +1,9 @@
+name: MyCinebook
+
+services:
+    api-service:
+        container_name: api-service
+        image: ghcr.io/lorenzobaronio22/my-cinebook
+        restart: unless-stopped
+        ports:
+            - 8000:8080

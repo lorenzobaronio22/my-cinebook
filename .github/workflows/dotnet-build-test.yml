@@ -5,14 +5,20 @@ name: .NET build and test
 
 on:
   push:
-    branches: [ "!main" ]
+    branches:
+    - "*"
+    - "!main"
+    paths-ignore:
+    - 'deploy/**'
+    - '.github/**'
   pull_request:
-    branches: [ "main" ]
+    branches:
+    - "main"
   workflow_call:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-and-test:
     name: dotnet build and test
 
     runs-on: ubuntu-latest
