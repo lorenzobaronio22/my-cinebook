@@ -36,6 +36,7 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Publish and push the container image
       run: |
+        cd my-cinebook.ApiService/
         dotnet publish --os linux --arch x64 -c Release /p:PublishProfile=ghcr.io
 
   deploy:
@@ -59,4 +60,4 @@ jobs:
     
     - name: Hit deploy webhook
       run:
-        url -X --fail POST https://portainer.tail10187.ts.net/api/stacks/webhooks/d37c0698-6154-4ab3-9e87-7b11aa7e4b86
+        curl -X --fail POST https://portainer.tail10187.ts.net/api/stacks/webhooks/d37c0698-6154-4ab3-9e87-7b11aa7e4b86
