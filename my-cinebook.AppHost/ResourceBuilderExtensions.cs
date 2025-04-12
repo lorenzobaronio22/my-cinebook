@@ -10,9 +10,9 @@ internal static class ResourceBuilderExtensions
         var name = "scalar";
         var displayName = "Scalar";
         return builder.WithCommand(
-            name,
-            displayName,
-            async _ =>
+            name: name,
+            displayName: displayName,
+            executeCommand: _ =>
             {
                 try
                 {
@@ -20,14 +20,14 @@ internal static class ResourceBuilderExtensions
                     var url = $"{endpoint.Url}/scalar/v1";
                     Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
                     ;
-                    return new ExecuteCommandResult { Success = true };
+                    return Task.FromResult(new ExecuteCommandResult { Success = true });
                 }
                 catch (Exception ex)
                 {
-                    return new ExecuteCommandResult { Success = false, ErrorMessage = ex.Message };
+                    return Task.FromResult(new ExecuteCommandResult { Success = false, ErrorMessage = ex.Message });
                 }
             },
-            new CommandOptions
+            commandOptions: new CommandOptions
             {
                 UpdateState = context => context.ResourceSnapshot.HealthStatus == HealthStatus.Healthy ? ResourceCommandState.Enabled : ResourceCommandState.Disabled,
                 IconName = "Bookmark",
