@@ -6,11 +6,14 @@ name: .NET build and test
 on:
   push:
     branches:
-        - "*"
-        - "!main"
+    - "*"
+    - "!main"
+    paths-ignore:
+    - 'deploy/**'
+    - '.github/**'
   pull_request:
     branches:
-        - "main"
+    - "main"
   workflow_call:
   workflow_dispatch:
 
