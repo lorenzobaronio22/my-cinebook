@@ -1,8 +1,9 @@
-﻿using Aspire.Hosting;
+﻿using System.Net.Http.Json;
+using Aspire.Hosting;
 
 namespace MyCinebook.TestApiService;
 
-public class IntegrationTestBookApiService : IAsyncLifetime
+public class IntegrationTestBookingApiService : IAsyncLifetime
 {
     private DistributedApplication? _app;
     public async Task DisposeAsync()
@@ -16,14 +17,14 @@ public class IntegrationTestBookApiService : IAsyncLifetime
     public async Task InitializeAsync()
     {
         var appHost = await DistributedApplicationTestingBuilder
-            .CreateAsync<Projects.MyCinebook_BookApiService>();
+            .CreateAsync<Projects.MyCinebook_BookingApiService>();
 
         _app = await appHost.BuildAsync();
         await _app.StartAsync();
     }
 
     [Fact]
-    public async Task ShouldStartApp()
+    public async Task ShouldBookOneSeat()
     {
         // Arrange
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
@@ -32,5 +33,17 @@ public class IntegrationTestBookApiService : IAsyncLifetime
             throw new InvalidOperationException("The application has not been initialized.");
         }
 
+        var httpClient = _app.CreateHttpClient("bookapiservice");
+        await _app.ResourceNotifications.WaitForResourceHealthyAsync("bookapiservice", cts.Token);
+
+        // Act
+        var content = JsonContent.Create(new
+        {
+            Show = "The Matrix"
+        });
+        var response = await httpClient.PostAsync("/bookings", content, cts.Token);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 }

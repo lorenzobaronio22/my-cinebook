@@ -17,7 +17,7 @@ builder.AddProject<Projects.MyCinebook_MigrationService>("migrationservice")
     .WithReference(scheduleDatabase)
     .WaitFor(postgresServer);
 
-builder.AddProject<Projects.MyCinebook_BookApiService>("bookapiservice")
+builder.AddProject<Projects.MyCinebook_BookingApiService>("bookapiservice")
     .WithHttpsHealthCheck("/health")
     .WithScalar();
 

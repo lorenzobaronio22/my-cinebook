@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using MyCinebook.ScheduleData;
 using Microsoft.EntityFrameworkCore;
-using MyCinebook.ScheduleData;
 
 namespace MyCinebook.MigrationService;
 
