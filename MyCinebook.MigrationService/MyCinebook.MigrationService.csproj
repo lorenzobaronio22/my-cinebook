@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-MyCinebook.MigrationService-5c97835b-a8a9-4a66-9bdc-897cefe33125</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="9.2.0" />
+    <PackageReference Include="Aspire.Npgsql" Version="9.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.4" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MyCinebook.ScheduleApiService\MyCinebook.ScheduleApiService.csproj" />
+    <ProjectReference Include="..\MyCinebook.ServiceDefaults\MyCinebook.ServiceDefaults.csproj" />
+  </ItemGroup>
+</Project>

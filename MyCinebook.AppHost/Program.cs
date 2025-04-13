@@ -1,3 +1,4 @@
+using Aspire.Hosting;
 using MyCinebook.AppHost;
 
 var builder = DistributedApplication.CreateBuilder(args);
@@ -16,6 +17,9 @@ builder.AddProject<Projects.MyCinebook_ScheduleApiService>("scheduleapiservice")
     .WithScalar()
     .WithReference(scheduleDatabase);
 
-builder.AddProject<Projects.MyCinebook_MigrationService>("mycinebook-migrationservice");
+builder.AddProject<Projects.MyCinebook_MigrationService>("migrationservice")
+    .WithReference(postgresServer)
+    .WithReference(scheduleDatabase)
+    .WaitFor(postgresServer);
 
 builder.Build().Run();

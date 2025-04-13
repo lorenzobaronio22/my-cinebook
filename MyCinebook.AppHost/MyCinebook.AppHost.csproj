@@ -11,7 +11,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\my-cinebook.ApiService\MyCinebook.ApiService.csproj" />
     <ProjectReference Include="..\MyCinebook.MigrationService\MyCinebook.MigrationService.csproj" />
     <ProjectReference Include="..\MyCinebook.ScheduleApiService\MyCinebook.ScheduleApiService.csproj" />
     <ProjectReference Include="..\MyCinebook.ServiceDefaults\MyCinebook.ServiceDefaults.csproj" />
