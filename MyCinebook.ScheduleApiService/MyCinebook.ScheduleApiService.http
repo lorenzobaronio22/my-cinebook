@@ -1,0 +1,6 @@
+@MyCinebook.ScheduleApiService_HostAddress = http://localhost:5051
+
+GET {{MyCinebook.ScheduleApiService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

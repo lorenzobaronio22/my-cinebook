@@ -12,11 +12,14 @@
 
   <ItemGroup>
     <ProjectReference Include="..\my-cinebook.ApiService\MyCinebook.ApiService.csproj" />
+    <ProjectReference Include="..\MyCinebook.MigrationService\MyCinebook.MigrationService.csproj" />
+    <ProjectReference Include="..\MyCinebook.ScheduleApiService\MyCinebook.ScheduleApiService.csproj" />
     <ProjectReference Include="..\MyCinebook.ServiceDefaults\MyCinebook.ServiceDefaults.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.AppHost" Version="9.2.0" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="9.2.0" />
   </ItemGroup>
 
 </Project>
