@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using MyCinebook.ScheduleData;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
@@ -20,7 +21,7 @@ namespace MyCinebook.ScheduleData.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("MyCinebook.ScheduleData.SeatModel", b =>
+            modelBuilder.Entity("MyCinebook.ScheduleData.ScheduleSeatModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -34,17 +35,17 @@ namespace MyCinebook.ScheduleData.Migrations
                     b.Property<int>("Number")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("ShowModelId")
+                    b.Property<int?>("ScheduleShowModelId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ShowModelId");
+                    b.HasIndex("ScheduleShowModelId");
 
                     b.ToTable("Seats");
                 });
 
-            modelBuilder.Entity("MyCinebook.ScheduleData.ShowModel", b =>
+            modelBuilder.Entity("MyCinebook.ScheduleData.ScheduleShowModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -61,14 +62,14 @@ namespace MyCinebook.ScheduleData.Migrations
                     b.ToTable("Shows");
                 });
 
-            modelBuilder.Entity("MyCinebook.ScheduleData.SeatModel", b =>
+            modelBuilder.Entity("MyCinebook.ScheduleData.ScheduleSeatModel", b =>
                 {
-                    b.HasOne("MyCinebook.ScheduleData.ShowModel", null)
+                    b.HasOne("MyCinebook.ScheduleData.ScheduleShowModel", null)
                         .WithMany("Seats")
-                        .HasForeignKey("ShowModelId");
+                        .HasForeignKey("ScheduleShowModelId");
                 });
 
-            modelBuilder.Entity("MyCinebook.ScheduleData.ShowModel", b =>
+            modelBuilder.Entity("MyCinebook.ScheduleData.ScheduleShowModel", b =>
                 {
                     b.Navigation("Seats");
                 });

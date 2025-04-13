@@ -32,22 +32,22 @@ namespace MyCinebook.ScheduleData.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Line = table.Column<char>(type: "character(1)", nullable: false),
                     Number = table.Column<int>(type: "integer", nullable: false),
-                    ShowModelId = table.Column<int>(type: "integer", nullable: true)
+                    ScheduleShowModelId = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Seats", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Seats_Shows_ShowModelId",
-                        column: x => x.ShowModelId,
+                        name: "FK_Seats_Shows_ScheduleShowModelId",
+                        column: x => x.ScheduleShowModelId,
                         principalTable: "Shows",
                         principalColumn: "Id");
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Seats_ShowModelId",
+                name: "IX_Seats_ScheduleShowModelId",
                 table: "Seats",
-                column: "ShowModelId");
+                column: "ScheduleShowModelId");
         }
 
         /// <inheritdoc />

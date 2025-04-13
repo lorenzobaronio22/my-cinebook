@@ -1,42 +1,27 @@
 using System.Text.Json;
 using Aspire.Hosting;
 using IdentityModel.Client;
+using static Google.Protobuf.Compiler.CodeGeneratorResponse.Types;
 
 namespace MyCinebook.TestApiService;
 
-public class IntegrationTestScheduleApiService : IAsyncLifetime
+[Collection("TestApplicationCollection")]
+public class IntegrationTestScheduleApiService(TestApplicationFixture fixture)
 {
-    private DistributedApplication? _app;
-
-    public async Task DisposeAsync()
-    {
-        if (_app != null)
-        {
-            await _app.DisposeAsync();
-        }
-    }
-
-    public async Task InitializeAsync()
-    {
-        var appHost = await DistributedApplicationTestingBuilder
-            .CreateAsync<Projects.MyCinebook_ScheduleApiService>();
-
-        _app = await appHost.BuildAsync();
-        await _app.StartAsync();
-    }
+    private readonly TestApplicationFixture _fixture = fixture;
 
     [Fact]
     public async Task ShouldListScheduledShows()
     {
         // Arrange
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-        if (_app == null)
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+        if (_fixture.App == null)
         {
             throw new InvalidOperationException("The application has not been initialized.");
         }
 
-        var httpClient = _app.CreateHttpClient("scheduleapiservice");
-        await _app.ResourceNotifications.WaitForResourceHealthyAsync("scheduleapiservice", cts.Token);
+        var httpClient = _fixture.App.CreateHttpClient("scheduleapiservice");
+        await _fixture.App.ResourceNotifications.WaitForResourceHealthyAsync("scheduleapiservice", cts.Token);
 
         // Act
         var response = await httpClient.GetAsync("/shows", cts.Token);

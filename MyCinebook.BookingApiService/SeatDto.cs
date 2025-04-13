@@ -1,6 +1,6 @@
-﻿namespace MyCinebook.ScheduleData;
+﻿namespace MyCinebook.BookingApiService;
 
-public class SeatModel
+public class SeatDto
 {
     public int Id { get; set; }
     public char Line { get; set; }

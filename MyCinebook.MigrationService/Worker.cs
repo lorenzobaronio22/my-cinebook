@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using MyCinebook.ScheduleData;
 using Microsoft.EntityFrameworkCore;
+using MyCinebook.BookingData;
 
 namespace MyCinebook.MigrationService;
 
@@ -10,7 +11,7 @@ public class Worker(ILogger<Worker> logger, IServiceProvider serviceProvider, IH
     private readonly IServiceProvider serviceProvider = serviceProvider;
     private readonly IHostApplicationLifetime hostApplicationLifetime = hostApplicationLifetime;
 
-    public const string ActivitySourceName = "Migrations";
+    public const string ActivitySourceName = "Migrations Schedule";
     private static readonly ActivitySource s_activitySource = new(ActivitySourceName);
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
@@ -19,10 +20,14 @@ public class Worker(ILogger<Worker> logger, IServiceProvider serviceProvider, IH
         try
         {
             using var scope = serviceProvider.CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<ScheduleDbContext>();
 
-            await RunMigrationAsync(dbContext, cancellationToken);
-            await SeedDataAsync(dbContext, cancellationToken);
+            var scheduleDbContext = scope.ServiceProvider.GetRequiredService<ScheduleDbContext>();
+            await RunMigrationAsync(scheduleDbContext, cancellationToken);
+            await SeedDataAsync(scheduleDbContext, cancellationToken);
+
+            var bookingDbContext = scope.ServiceProvider.GetRequiredService<BookingDbContext>();
+            await RunMigrationAsync(bookingDbContext, cancellationToken);
+
         }
         catch (Exception ex)
         {
@@ -55,30 +60,30 @@ public class Worker(ILogger<Worker> logger, IServiceProvider serviceProvider, IH
         if (!await dbContext.Shows.AnyAsync(cancellationToken))
         {
             // Create example data for shows
-            var shows = new List<ShowModel>
+            var shows = new List<ScheduleShowModel>
             {
                 new() {
                     Title = "The Matrix",
                     Seats =
                     [
-                        new SeatModel { Line = 'A', Number = 1 },
-                        new SeatModel { Line = 'A', Number = 2 },
-                        new SeatModel { Line = 'A', Number = 3 },
-                        new SeatModel { Line = 'B', Number = 1 },
-                        new SeatModel { Line = 'B', Number = 2 },
-                        new SeatModel { Line = 'B', Number = 3 }
+                        new ScheduleSeatModel { Line = 'A', Number = 1 },
+                        new ScheduleSeatModel { Line = 'A', Number = 2 },
+                        new ScheduleSeatModel { Line = 'A', Number = 3 },
+                        new ScheduleSeatModel { Line = 'B', Number = 1 },
+                        new ScheduleSeatModel { Line = 'B', Number = 2 },
+                        new ScheduleSeatModel { Line = 'B', Number = 3 }
                     ]
                 },
                 new() {
                     Title = "Inception",
                     Seats =
                     [
-                        new SeatModel { Line = 'A', Number = 1 },
-                        new SeatModel { Line = 'A', Number = 2 },
-                        new SeatModel { Line = 'A', Number = 3 },
-                        new SeatModel { Line = 'B', Number = 1 },
-                        new SeatModel { Line = 'B', Number = 2 },
-                        new SeatModel { Line = 'B', Number = 3 }
+                        new ScheduleSeatModel { Line = 'A', Number = 1 },
+                        new ScheduleSeatModel { Line = 'A', Number = 2 },
+                        new ScheduleSeatModel { Line = 'A', Number = 3 },
+                        new ScheduleSeatModel { Line = 'B', Number = 1 },
+                        new ScheduleSeatModel { Line = 'B', Number = 2 },
+                        new ScheduleSeatModel { Line = 'B', Number = 3 }
                     ]
                 }
             };
@@ -87,5 +92,14 @@ public class Worker(ILogger<Worker> logger, IServiceProvider serviceProvider, IH
             await dbContext.Shows.AddRangeAsync(shows, cancellationToken);
             await dbContext.SaveChangesAsync(cancellationToken);
         }
+    }
+    private async Task RunMigrationAsync(BookingDbContext dbContext, CancellationToken cancellationToken)
+    {
+        var strategy = dbContext.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
+        {
+            // Run migration in a transaction to avoid partial migration if it fails.
+            await dbContext.Database.MigrateAsync(cancellationToken);
+        });
     }
 }
