@@ -1,44 +1,59 @@
-using System.Text.Json;
-using Aspire.Hosting;
 using IdentityModel.Client;
 
 namespace MyCinebook.TestApiService;
 
-public class IntegrationTestScheduleApiService : IAsyncLifetime
+public class IntegrationTestFixture : IAsyncLifetime
 {
-    private DistributedApplication? _app;
-
-    public async Task DisposeAsync()
-    {
-        if (_app != null)
-        {
-            await _app.DisposeAsync();
-        }
-    }
+    public DistributedApplicationTestingBuilder<Projects.MyCinebook_ScheduleApiService> Builder { get; private set; }
+    public IDistributedApplication App { get; private set; }
 
     public async Task InitializeAsync()
     {
-        var appHost = await DistributedApplicationTestingBuilder
+        Builder = await DistributedApplicationTestingBuilder
             .CreateAsync<Projects.MyCinebook_ScheduleApiService>();
 
-        _app = await appHost.BuildAsync();
-        await _app.StartAsync();
+        Builder.Services.ConfigureHttpClientDefaults(clientBuilder =>
+        {
+            clientBuilder.AddStandardResilienceHandler();
+        });
+
+        App = await Builder.BuildAsync();
+        await App.StartAsync();
+    }
+
+    public async Task DisposeAsync()
+    {
+        if (App != null)
+        {
+            await App.DisposeAsync();
+        }
+    }
+}
+using System.Text.Json;
+using IdentityModel.Client;
+
+namespace MyCinebook.TestApiService;
+
+public class IntegrationTestScheduleApiService : IClassFixture<IntegrationTestFixture>
+{
+    private readonly IntegrationTestFixture _fixture;
+
+    public IntegrationTestScheduleApiService(IntegrationTestFixture fixture)
+    {
+        _fixture = fixture;
     }
 
     [Fact]
     public async Task ShouldListScheduledShows()
     {
         // Arrange
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-        if (_app == null)
-        {
-            throw new InvalidOperationException("The application has not been initialized.");
-        }
-
-        var httpClient = _app.CreateHttpClient("scheduleapiservice");
-        await _app.ResourceNotifications.WaitForResourceHealthyAsync("scheduleapiservice", cts.Token);
+        var app = _fixture.App;
 
         // Act
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+
+        var httpClient = app.CreateHttpClient("scheduleapiservice");
+        await app.ResourceNotifications.WaitForResourceHealthyAsync("scheduleapiservice", cts.Token);
         var response = await httpClient.GetAsync("/shows", cts.Token);
 
         // Assert

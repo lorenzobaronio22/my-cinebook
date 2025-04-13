@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyCinebook.MigrationService
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyCinebook.ScheduleData", "MyCinebook.ScheduleData\MyCinebook.ScheduleData.csproj", "{058099BF-4504-4FE8-AB7F-AFEA1405F330}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyCinebook.BookApiService", "MyCinebook.BookApiService\MyCinebook.BookApiService.csproj", "{ED949E83-FFE1-113B-FC1C-AEF7AFE6ABA3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,6 +46,10 @@ Global
 		{058099BF-4504-4FE8-AB7F-AFEA1405F330}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{058099BF-4504-4FE8-AB7F-AFEA1405F330}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{058099BF-4504-4FE8-AB7F-AFEA1405F330}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED949E83-FFE1-113B-FC1C-AEF7AFE6ABA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED949E83-FFE1-113B-FC1C-AEF7AFE6ABA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED949E83-FFE1-113B-FC1C-AEF7AFE6ABA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED949E83-FFE1-113B-FC1C-AEF7AFE6ABA3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
