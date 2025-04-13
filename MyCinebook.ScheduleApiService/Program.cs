@@ -26,6 +26,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Endpoints Mapping
 app.MapGet("/shows", (ScheduleDbContext context) =>
 {
     return context.Shows.Include(s => s.Seats).ToListAsync();
