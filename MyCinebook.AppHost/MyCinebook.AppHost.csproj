@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\my-cinebook.ApiService\MyCinebook.ApiService.csproj" />
+    <ProjectReference Include="..\MyCinebook.ServiceDefaults\MyCinebook.ServiceDefaults.csproj" />
   </ItemGroup>
 
   <ItemGroup>

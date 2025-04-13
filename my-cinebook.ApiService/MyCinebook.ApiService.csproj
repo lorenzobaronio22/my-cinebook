@@ -7,12 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\my-cinebook.ServiceDefaults\MyCinebook.ServiceDefaults.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.4" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.1.13" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.4" />
-    <PackageReference Include="Scalar.AspNetCore" Version="2.1.13" />
+    <ProjectReference Include="..\MyCinebook.ServiceDefaults\MyCinebook.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>
