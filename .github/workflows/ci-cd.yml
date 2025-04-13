@@ -10,8 +10,28 @@ jobs:
   call-build-and-test:
     uses: ./.github/workflows/build-test.yml
 
-  call-publish:
+  call-publish-schedule-api:
     uses: ./.github/workflows/publish-ghcr.yml
+
+    with:
+      docker-file-path: MyCinebook.ScheduleApiService/Dockerfile
+      docker-image-name: my-cinebook-schedule-api
+
+    permissions:
+      packages: write
+      contents: read
+      attestations: write
+      id-token: write
+
+    needs:
+    - call-build-and-test
+
+  call-publish-migration-worker:
+    uses: ./.github/workflows/publish-ghcr.yml
+
+    with:
+      docker-file-path: MyCinebook.MigrationService/Dockerfile
+      docker-image-name: my-cinebook-migration-worker
 
     permissions:
       packages: write

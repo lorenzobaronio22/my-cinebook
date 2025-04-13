@@ -18,9 +18,9 @@
     <PackageReference Include="xunit" Version="2.9.3" />
     </ItemGroup>
 
-	<ItemGroup>
-        <ProjectReference Include="..\my-cinebook.AppHost\MyCinebook.AppHost.csproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MyCinebook.AppHost\MyCinebook.AppHost.csproj" />
+  </ItemGroup>
 
     <ItemGroup>
     <Using Include="System.Net" />
