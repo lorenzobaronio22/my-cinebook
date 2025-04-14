@@ -66,7 +66,7 @@ public class BookingService
 
         var availableSpecificSeat = availableSeats
             .FirstOrDefault(seat => seat.Line == booking.Seat.Line && seat.Number == booking.Seat.Number);
-        return availableSpecificSeat ?? throw new BookingError($"Seat {booking.Seat.Line}-{booking.Seat.Number} in Show {scheduledShow.Title} is not availabel.");
+        return availableSpecificSeat ?? throw new BookingError($"Seat {booking.Seat.Line}-{booking.Seat.Number} in Show {scheduledShow.Title} is not available.");
     }
 
     private static Booking SaveBooking(ResponseScheduledShowDto scheduledShow, ResponseScheduledShowSeatDto seatToReseve, BookingDbContext dbContext) {

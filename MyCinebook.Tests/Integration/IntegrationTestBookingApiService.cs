@@ -14,10 +14,12 @@ public class IntegrationTestBookingApiService(TestApplicationFixture fixture)
     private readonly TimeSpan CancellationTokenTimeOut = TimeSpan.FromSeconds(120);
 
     private readonly int FreeShowId = 1;
-    private readonly int SoldOutShowId = 2;
-    private readonly int NotExistantShowId = 99;
     private readonly string FreeSeatLine = "B";
     private readonly int FreeSeatNumber = 1;
+    private readonly string BookedFreeSeatLine = "A";
+    private readonly int BookedSeatNumber = 1;
+    private readonly int SoldOutShowId = 2;
+    private readonly int NotExistantShowId = 99;
 
     [Fact]
     public async Task PostBookings_ShouldBookOneSeat_WhenShowIsAvailable()
@@ -117,18 +119,6 @@ public class IntegrationTestBookingApiService(TestApplicationFixture fixture)
         Assert.Contains("not found", responseBody);
     }
 
-    private async Task<HttpClient> InitializeHttpClientForBooking(CancellationTokenSource cts)
-    {
-        if (_fixture.App == null)
-        {
-            throw new InvalidOperationException("The application has not been initialized.");
-        }
-
-        var httpClient = _fixture.App.CreateHttpClient("bookapiservice");
-        await _fixture.App.ResourceNotifications.WaitForResourceHealthyAsync("bookapiservice", cts.Token);
-        return httpClient;
-    }
-
     [Fact]
     public async Task PostBookings_ShouldBookSpecificSeat_WhenShowAndSeatAreAvailable()
     {
@@ -183,5 +173,38 @@ public class IntegrationTestBookingApiService(TestApplicationFixture fixture)
         Assert.Equal(JsonValueKind.Number, numberProperty.ValueKind);
         Assert.Equal(FreeSeatNumber, numberProperty.GetInt32());
 
+    }
+    [Fact]
+    public async Task PostBookings_ShouldNotBookSpecificSeat_WhenShowIsAvailableButSeatIsAlreadyBooked()
+    {
+        // Arrange
+        using var cts = new CancellationTokenSource(CancellationTokenTimeOut);
+        HttpClient httpClient = await InitializeHttpClientForBooking(cts);
+
+        // Act
+        var content = JsonContent.Create(new
+        {
+            ShowId = FreeShowId,
+            Seat = new { Line = BookedFreeSeatLine, Number = BookedSeatNumber }
+        });
+        var response = await httpClient.PostAsync("/bookings", content, cts.Token);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var responseBody = await response.Content.ReadAsStringAsync(cts.Token);
+        Assert.Contains("not available", responseBody);
+    }
+
+    private async Task<HttpClient> InitializeHttpClientForBooking(CancellationTokenSource cts)
+    {
+        if (_fixture.App == null)
+        {
+            throw new InvalidOperationException("The application has not been initialized.");
+        }
+
+        var httpClient = _fixture.App.CreateHttpClient("bookapiservice");
+        await _fixture.App.ResourceNotifications.WaitForResourceHealthyAsync("bookapiservice", cts.Token);
+        return httpClient;
     }
 }

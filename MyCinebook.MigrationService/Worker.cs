@@ -94,13 +94,18 @@ public class Worker(IServiceProvider serviceProvider, IHostApplicationLifetime h
         if (!await dbContext.Booking.AnyAsync(cancellationToken))
         {
             var booking = new Booking { CreatedAt = DateTime.UtcNow, Shows = [] };
-            await dbContext.Booking.AddAsync(booking, cancellationToken);
 
-            var bookedShow = new BookedShow { ShowId = 2, ShowTitle = "Private show", Booking = booking, Seats = [] };
+            var bookedShow = new BookedShow { ShowId = 1, ShowTitle = "The Matrix", Booking = booking, Seats = [] };
             booking.Shows.Add(bookedShow);
             var bookedShowSeat = new BookedShowSeat { Line = "A", Number = 1, BookedShow = bookedShow };
             bookedShow.Seats.Add(bookedShowSeat);
 
+            var soldOutShow = new BookedShow { ShowId = 2, ShowTitle = "Private show", Booking = booking, Seats = [] };
+            booking.Shows.Add(soldOutShow);
+            var soldOutShowSeat = new BookedShowSeat { Line = "A", Number = 1, BookedShow = soldOutShow };
+            soldOutShow.Seats.Add(soldOutShowSeat);
+
+            await dbContext.Booking.AddAsync(booking, cancellationToken);
             await dbContext.SaveChangesAsync(cancellationToken);
         }
     }
