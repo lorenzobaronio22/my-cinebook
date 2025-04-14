@@ -1,8 +1,9 @@
 ﻿using System.Text.Json;
+using MyCinebook.BookingApiService.Dtos;
 
 namespace MyCinebook.BookingApiService;
 
-public class ScheduleClient(HttpClient httpClient)
+public class ScheduleClient(HttpClient httpClient) : IScheduleClient
 {
     private readonly HttpClient _httpClient = httpClient;
 

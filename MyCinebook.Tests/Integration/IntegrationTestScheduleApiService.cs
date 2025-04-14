@@ -2,9 +2,10 @@ using System.Text.Json;
 using System.Xml.Linq;
 using Aspire.Hosting;
 using IdentityModel.Client;
+using MyCinebook.TestApiService;
 using static Google.Protobuf.Compiler.CodeGeneratorResponse.Types;
 
-namespace MyCinebook.TestApiService;
+namespace MyCinebook.Tests.Integration;
 
 [Collection("TestApplicationCollection")]
 public class IntegrationTestScheduleApiService(TestApplicationFixture fixture)

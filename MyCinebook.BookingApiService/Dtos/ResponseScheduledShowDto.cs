@@ -1,4 +1,4 @@
-﻿namespace MyCinebook.BookingApiService;
+﻿namespace MyCinebook.BookingApiService.Dtos;
 
 public class ResponseScheduledShowDto
 {

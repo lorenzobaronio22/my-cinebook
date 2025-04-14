@@ -1,7 +1,8 @@
 ﻿using System.Net.Http.Json;
 using System.Text.Json;
+using MyCinebook.TestApiService;
 
-namespace MyCinebook.TestApiService;
+namespace MyCinebook.Tests.Integration;
 
 [Collection("TestApplicationCollection")]
 public class IntegrationTestBookingApiService(TestApplicationFixture fixture)
