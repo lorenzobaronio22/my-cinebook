@@ -18,6 +18,8 @@ public static class BookingEndpoints
         .Produces<ResponseBookingDto>(StatusCodes.Status201Created)
         .ProducesProblem(StatusCodes.Status500InternalServerError)
         .Produces(StatusCodes.Status400BadRequest);
+
+        group.MapDelete("/{id}", BookingEndpoints.Delete);
     }
 
     public static async Task<IResult> Post([FromBody] RequestBookingDto bookingDto, HttpContext context)
@@ -31,15 +33,28 @@ public static class BookingEndpoints
 
             var responseBookingDto = BookingService.MapToResponseBookingDto(newBooking);
 
-            return Results.Created($"/bookings/{newBooking.Id}", responseBookingDto);
+            return TypedResults.Created($"/bookings/{newBooking.Id}", responseBookingDto);
         }
         catch (BookingError error)
         {
-            return Results.BadRequest(error.Message);
+            return TypedResults.BadRequest(error.Message);
         }
         catch (Exception)
         {
-            return Results.InternalServerError("An error occurred!");
+            return TypedResults.InternalServerError("An error occurred!");
         }
     }
+
+    private static async Task<IResult> Delete(int id, BookingDbContext dbContext)
+    {
+        var booking = await dbContext.Booking.FindAsync(id);
+        if (booking == null)
+        {
+            return TypedResults.NotFound();
+        }
+        booking.DeletedAt = DateTime.UtcNow;
+        await dbContext.SaveChangesAsync();
+        return TypedResults.NoContent();
+    }
+
 }
