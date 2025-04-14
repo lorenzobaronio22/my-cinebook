@@ -42,6 +42,19 @@ public class BookingService
         return matchingShow ?? throw new BookingError("Show not found.");
     }
 
+    public static async Task DeleteBooking(int id, BookingDbContext dbContext)
+    {
+        // DONT COMMMIT
+        if (id == 42) throw new Exception("Test Produce Problem");
+        // DONT COMMIT
+
+        var booking = await dbContext.Booking.FindAsync(id)
+            ?? throw new BookingError($"Booking {id} not found.");
+
+        booking.DeletedAt = DateTime.UtcNow;
+        await dbContext.SaveChangesAsync();
+    }
+
     private static ResponseScheduledShowSeatDto FindAvailableSeat(ResponseScheduledShowDto scheduledShow, RequestBookingDto booking, BookingDbContext dbContext)
     {
         if (booking?.Seat != null && !scheduledShow.Seats.Any(s => s.Line == booking.Seat.Line && s.Number == booking.Seat.Number))
