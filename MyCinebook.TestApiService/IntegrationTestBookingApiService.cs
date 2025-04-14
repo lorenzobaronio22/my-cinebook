@@ -8,11 +8,16 @@ public class IntegrationTestBookingApiService(TestApplicationFixture fixture)
 {
     private readonly TestApplicationFixture _fixture = fixture;
 
+    private readonly TimeSpan CancellationTokenTimeOut = TimeSpan.FromSeconds(600);
+
+    private readonly int FreeShowId = 1;
+    private readonly int SoldOutShowId = 2;
+
     [Fact]
     public async Task ShouldBookOneSeat()
     {
         // Arrange
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(300));
+        using var cts = new CancellationTokenSource(CancellationTokenTimeOut);
         if (_fixture.App == null)
         {
             throw new InvalidOperationException("The application has not been initialized.");
@@ -24,7 +29,7 @@ public class IntegrationTestBookingApiService(TestApplicationFixture fixture)
         // Act
         var content = JsonContent.Create(new
         {
-            ShowId = 1
+            ShowId = FreeShowId
         });
         var response = await httpClient.PostAsync("/bookings", content, cts.Token);
 
@@ -45,5 +50,32 @@ public class IntegrationTestBookingApiService(TestApplicationFixture fixture)
         Assert.Equal(JsonValueKind.String, createdAt.ValueKind);
         Assert.True(DateTime.TryParse(createdAt.GetString(), out var createdAtDateTime), "The 'createdAt' attribute is not a valid DateTime string.");
         Assert.Equal(DateTime.Today, createdAtDateTime.Date);
+    }
+
+    [Fact]
+    public async Task ShouldNotBookSoldOutShow()
+    {
+        // Arrange
+        using var cts = new CancellationTokenSource(CancellationTokenTimeOut);
+        if (_fixture.App == null)
+        {
+            throw new InvalidOperationException("The application has not been initialized.");
+        }
+
+        var httpClient = _fixture.App.CreateHttpClient("bookapiservice");
+        await _fixture.App.ResourceNotifications.WaitForResourceHealthyAsync("bookapiservice", cts.Token);
+
+        // Act
+        var content = JsonContent.Create(new
+        {
+            ShowId = SoldOutShowId
+        });
+        var response = await httpClient.PostAsync("/bookings", content, cts.Token);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var responseBody = await response.Content.ReadAsStringAsync(cts.Token);
+        Assert.Contains("sold-out", responseBody);
     }
 }

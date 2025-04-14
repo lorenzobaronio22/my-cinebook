@@ -12,52 +12,53 @@ namespace MyCinebook.ScheduleData.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Shows",
+                name: "ScheduledShow",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    ID = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Title = table.Column<string>(type: "text", nullable: false)
+                    Title = table.Column<string>(type: "character varying(250)", maxLength: 250, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Shows", x => x.Id);
+                    table.PrimaryKey("PK_ScheduledShow", x => x.ID);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Seats",
+                name: "ScheduledShowSeat",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    ID = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Line = table.Column<char>(type: "character(1)", nullable: false),
+                    Line = table.Column<string>(type: "text", nullable: false),
                     Number = table.Column<int>(type: "integer", nullable: false),
-                    ScheduleShowModelId = table.Column<int>(type: "integer", nullable: true)
+                    ScheduledShowID = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Seats", x => x.Id);
+                    table.PrimaryKey("PK_ScheduledShowSeat", x => x.ID);
                     table.ForeignKey(
-                        name: "FK_Seats_Shows_ScheduleShowModelId",
-                        column: x => x.ScheduleShowModelId,
-                        principalTable: "Shows",
-                        principalColumn: "Id");
+                        name: "FK_ScheduledShowSeat_ScheduledShow_ScheduledShowID",
+                        column: x => x.ScheduledShowID,
+                        principalTable: "ScheduledShow",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Seats_ScheduleShowModelId",
-                table: "Seats",
-                column: "ScheduleShowModelId");
+                name: "IX_ScheduledShowSeat_ScheduledShowID",
+                table: "ScheduledShowSeat",
+                column: "ScheduledShowID");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Seats");
+                name: "ScheduledShowSeat");
 
             migrationBuilder.DropTable(
-                name: "Shows");
+                name: "ScheduledShow");
         }
     }
 }

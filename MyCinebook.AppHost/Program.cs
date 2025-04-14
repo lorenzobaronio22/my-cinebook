@@ -3,7 +3,8 @@ using MyCinebook.AppHost;
 var builder = DistributedApplication.CreateBuilder(args);
 
 var postgresServer = builder.AddPostgres("postgreSQLServer")
-    .WithPgAdmin();
+    //.WithPgAdmin()
+;
 
 var scheduleDatabase = postgresServer.AddDatabase("schedule");
 var bookingDatabase = postgresServer.AddDatabase("booking");

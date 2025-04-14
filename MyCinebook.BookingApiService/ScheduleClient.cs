@@ -11,13 +11,13 @@ public class ScheduleClient(HttpClient httpClient)
         PropertyNameCaseInsensitive = true
     };
 
-    public async Task<IEnumerable<ShowDto>> GetShowsAsync()
+    public async Task<IEnumerable<ResponseScheduledShowDto>> GetShowsAsync()
     {
         var response = await _httpClient.GetAsync("/shows");
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
-        List<ShowDto>? shows = JsonSerializer.Deserialize<List<ShowDto>>(content, _jsonSerializerOptions);
+        List<ResponseScheduledShowDto>? shows = JsonSerializer.Deserialize<List<ResponseScheduledShowDto>>(content, _jsonSerializerOptions);
 
         return shows ?? [];
     }

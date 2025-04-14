@@ -2,12 +2,13 @@ using System.Diagnostics;
 using MyCinebook.ScheduleData;
 using Microsoft.EntityFrameworkCore;
 using MyCinebook.BookingData;
+using MyCinebook.ScheduleData.Models;
+using MyCinebook.BookingData.Models;
 
 namespace MyCinebook.MigrationService;
 
-public class Worker(ILogger<Worker> logger, IServiceProvider serviceProvider, IHostApplicationLifetime hostApplicationLifetime) : BackgroundService
+public class Worker(IServiceProvider serviceProvider, IHostApplicationLifetime hostApplicationLifetime) : BackgroundService
 {
-    private readonly ILogger<Worker> _logger = logger;
     private readonly IServiceProvider serviceProvider = serviceProvider;
     private readonly IHostApplicationLifetime hostApplicationLifetime = hostApplicationLifetime;
 
@@ -27,6 +28,7 @@ public class Worker(ILogger<Worker> logger, IServiceProvider serviceProvider, IH
 
             var bookingDbContext = scope.ServiceProvider.GetRequiredService<BookingDbContext>();
             await RunMigrationAsync(bookingDbContext, cancellationToken);
+            await SeedDataAsync(bookingDbContext, cancellationToken);
 
         }
         catch (Exception ex)
@@ -48,7 +50,6 @@ public class Worker(ILogger<Worker> logger, IServiceProvider serviceProvider, IH
         var strategy = dbContext.Database.CreateExecutionStrategy();
         await strategy.ExecuteAsync(async () =>
         {
-            // Run migration in a transaction to avoid partial migration if it fails.
             await dbContext.Database.MigrateAsync(cancellationToken);
         });
 
@@ -56,50 +57,51 @@ public class Worker(ILogger<Worker> logger, IServiceProvider serviceProvider, IH
 
     private static async Task SeedDataAsync(ScheduleDbContext dbContext, CancellationToken cancellationToken)
     {
-        // Check if there are any existing shows in the database
-        if (!await dbContext.Shows.AnyAsync(cancellationToken))
+        if (!await dbContext.ScheduledShow.AnyAsync(cancellationToken))
         {
-            // Create example data for shows
-            var shows = new List<ScheduleShowModel>
-            {
-                new() {
-                    Title = "The Matrix",
-                    Seats =
-                    [
-                        new ScheduleSeatModel { Line = 'A', Number = 1 },
-                        new ScheduleSeatModel { Line = 'A', Number = 2 },
-                        new ScheduleSeatModel { Line = 'A', Number = 3 },
-                        new ScheduleSeatModel { Line = 'B', Number = 1 },
-                        new ScheduleSeatModel { Line = 'B', Number = 2 },
-                        new ScheduleSeatModel { Line = 'B', Number = 3 }
-                    ]
-                },
-                new() {
-                    Title = "Inception",
-                    Seats =
-                    [
-                        new ScheduleSeatModel { Line = 'A', Number = 1 },
-                        new ScheduleSeatModel { Line = 'A', Number = 2 },
-                        new ScheduleSeatModel { Line = 'A', Number = 3 },
-                        new ScheduleSeatModel { Line = 'B', Number = 1 },
-                        new ScheduleSeatModel { Line = 'B', Number = 2 },
-                        new ScheduleSeatModel { Line = 'B', Number = 3 }
-                    ]
-                }
-            };
+            var show1 = new ScheduledShow { Title = "The Matrix", Seats = [] };
+            show1.Seats =
+            [
+                new ScheduledShowSeat { Line = "A", Number = 1, ScheduledShow = show1 },
+                new ScheduledShowSeat { Line = "A", Number = 2, ScheduledShow = show1 },
+                new ScheduledShowSeat { Line = "A", Number = 3, ScheduledShow = show1 },
+                new ScheduledShowSeat { Line = "B", Number = 1, ScheduledShow = show1 },
+                new ScheduledShowSeat { Line = "B", Number = 2, ScheduledShow = show1 },
+                new ScheduledShowSeat { Line = "B", Number = 3, ScheduledShow = show1 }
+            ];
 
-            // Add the shows to the database
-            await dbContext.Shows.AddRangeAsync(shows, cancellationToken);
+            var show2 = new ScheduledShow { Title = "Private show", Seats = [] };
+            show2.Seats.Add(new ScheduledShowSeat { Line = "A", Number = 1, ScheduledShow = show2 });
+
+            var shows = new List<ScheduledShow> { show1, show2 };
+
+            await dbContext.ScheduledShow.AddRangeAsync(shows, cancellationToken);
             await dbContext.SaveChangesAsync(cancellationToken);
         }
     }
-    private async Task RunMigrationAsync(BookingDbContext dbContext, CancellationToken cancellationToken)
+
+    private static async Task RunMigrationAsync(BookingDbContext dbContext, CancellationToken cancellationToken)
     {
         var strategy = dbContext.Database.CreateExecutionStrategy();
         await strategy.ExecuteAsync(async () =>
         {
-            // Run migration in a transaction to avoid partial migration if it fails.
             await dbContext.Database.MigrateAsync(cancellationToken);
         });
+    }
+
+    private static async Task SeedDataAsync(BookingDbContext dbContext, CancellationToken cancellationToken)
+    {
+        if (!await dbContext.Booking.AnyAsync(cancellationToken))
+        {
+            var booking = new Booking { CreatedAt = DateTime.UtcNow, Shows = [] };
+            await dbContext.Booking.AddAsync(booking, cancellationToken);
+
+            var bookedShow = new BookedShow { ShowId = 2, ShowTitle = "Private show", Booking = booking, Seats = [] };
+            booking.Shows.Add(bookedShow);
+            var bookedShowSeat = new BookedShowSeat { Line = "A", Number = 1, BookedShow = bookedShow };
+            bookedShow.Seats.Add(bookedShowSeat);
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
     }
 }

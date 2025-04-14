@@ -13,7 +13,7 @@ namespace MyCinebook.BookingData.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "BookingModel",
+                name: "Booking",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
@@ -23,70 +23,73 @@ namespace MyCinebook.BookingData.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_BookingModel", x => x.Id);
+                    table.PrimaryKey("PK_Booking", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "BookingShowModel",
+                name: "BookedShow",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    ID = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Title = table.Column<string>(type: "text", nullable: false),
-                    BookingModelId = table.Column<int>(type: "integer", nullable: true)
+                    ShowId = table.Column<int>(type: "integer", nullable: false),
+                    ShowTitle = table.Column<string>(type: "character varying(250)", maxLength: 250, nullable: false),
+                    BookingId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_BookingShowModel", x => x.Id);
+                    table.PrimaryKey("PK_BookedShow", x => x.ID);
                     table.ForeignKey(
-                        name: "FK_BookingShowModel_BookingModel_BookingModelId",
-                        column: x => x.BookingModelId,
-                        principalTable: "BookingModel",
-                        principalColumn: "Id");
+                        name: "FK_BookedShow_Booking_BookingId",
+                        column: x => x.BookingId,
+                        principalTable: "Booking",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "BookingSeatModel",
+                name: "BookedShowSeat",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    ID = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Line = table.Column<char>(type: "character(1)", nullable: false),
+                    Line = table.Column<string>(type: "text", nullable: false),
                     Number = table.Column<int>(type: "integer", nullable: false),
-                    BookingShowModelId = table.Column<int>(type: "integer", nullable: true)
+                    BookedShowID = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_BookingSeatModel", x => x.Id);
+                    table.PrimaryKey("PK_BookedShowSeat", x => x.ID);
                     table.ForeignKey(
-                        name: "FK_BookingSeatModel_BookingShowModel_BookingShowModelId",
-                        column: x => x.BookingShowModelId,
-                        principalTable: "BookingShowModel",
-                        principalColumn: "Id");
+                        name: "FK_BookedShowSeat_BookedShow_BookedShowID",
+                        column: x => x.BookedShowID,
+                        principalTable: "BookedShow",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_BookingSeatModel_BookingShowModelId",
-                table: "BookingSeatModel",
-                column: "BookingShowModelId");
+                name: "IX_BookedShow_BookingId",
+                table: "BookedShow",
+                column: "BookingId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_BookingShowModel_BookingModelId",
-                table: "BookingShowModel",
-                column: "BookingModelId");
+                name: "IX_BookedShowSeat_BookedShowID",
+                table: "BookedShowSeat",
+                column: "BookedShowID");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "BookingSeatModel");
+                name: "BookedShowSeat");
 
             migrationBuilder.DropTable(
-                name: "BookingShowModel");
+                name: "BookedShow");
 
             migrationBuilder.DropTable(
-                name: "BookingModel");
+                name: "Booking");
         }
     }
 }

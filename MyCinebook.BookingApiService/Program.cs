@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MyCinebook.BookingApiService;
 using MyCinebook.BookingData;
+using MyCinebook.BookingData.Models;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -36,72 +37,63 @@ group.MapPost("", async (HttpContext context) =>
 {
     try
     {
-        var bookingDto = await context.Request.ReadFromJsonAsync<BookingDto>();
-        if (bookingDto == null || !bookingDto.isValid())
+        var bookingDto = await context.Request.ReadFromJsonAsync<RequestBookingDto>();
+        if (bookingDto == null || !bookingDto.IsValid())
         {
             return Results.BadRequest("Invalid request.");
         }
 
         ScheduleClient scheduleClient = context.RequestServices.GetRequiredService<ScheduleClient>();
         var shows = await scheduleClient.GetShowsAsync();
-        var matchingShow = shows.FirstOrDefault(show => show.Id == bookingDto.ShowId);
+        var matchingShow = shows.FirstOrDefault(show => show.ID == bookingDto.ShowId);
         if (matchingShow == null)
         {
             return Results.BadRequest("Show not found.");
         }
 
-        // Find the first available seat
         var dbContext = context.RequestServices.GetRequiredService<BookingDbContext>();
+        var bookedSeats = await dbContext.Booking
+            .Where(booking => booking.DeletedAt == null)
+            .SelectMany(booking => booking.Shows)
+            .Where(show => show.ShowId == matchingShow.ID)
+            .SelectMany(show => show.Seats)
+            .ToListAsync();
 
-        // Update the following block of code to ensure `allBookings` is not null before calling `Any`:
-        var allBookings = await dbContext.Set<BookingModel>().ToListAsync();
-        SeatDto availableSeat;
-        if (allBookings == null || allBookings.Count == 0)
-        {
-            availableSeat = matchingShow.Seats.First();
-        }
-        else
-        {
-            availableSeat = matchingShow.Seats.FirstOrDefault(seat =>
-                !allBookings.Any(booking =>
-                    booking.Shows.Any(show => show.Id == matchingShow.Id &&
-                        show.Seats.Any(takenSeat => takenSeat.Line == seat.Line && takenSeat.Number == seat.Number))
-                )
-            ) ?? throw new InvalidOperationException("No available seat found.");
-        }
+        var availableSeat = matchingShow.Seats
+            .FirstOrDefault(seat => !bookedSeats.Any(bookedSeat =>
+                bookedSeat.Line == seat.Line && bookedSeat.Number == seat.Number));
 
         if (availableSeat == null)
         {
-            return Results.BadRequest("No available seats.");
+            return Results.BadRequest($"Show ${matchingShow.Title} is sold-out.");
         }
 
-        // Create a new booking for the matching show and available seat
-        var newBooking = new BookingModel
-        {
-            CreatedAt = DateTime.UtcNow,
-            Shows =
-            [
-                new BookingShowModel
-                {
-                    Id = matchingShow.Id,
-                    Title = matchingShow.Title,
-                    Seats =
-                    [
-                        new BookingSeatModel
-                        {
-                            Id = availableSeat.Id,
-                            Line = availableSeat.Line,
-                            Number = availableSeat.Number
-                        }
-                    ]
-                }
-            ]
-        };
+        var newBooking = new Booking{ CreatedAt = DateTime.UtcNow, Shows = [] };
+        await dbContext.Booking.AddAsync(newBooking);
+        var newBookedShow = new BookedShow { ShowId = matchingShow.ID, ShowTitle = matchingShow.Title, Booking = newBooking, Seats = [] };
+        newBooking.Shows.Add(newBookedShow);
+        var newBookednShowSeat = new BookedShowSeat { Line = availableSeat.Line, Number = availableSeat.Number, BookedShow = newBookedShow };
+        newBookedShow.Seats.Add(newBookednShowSeat);
 
-        dbContext.Set<BookingModel>().Add(newBooking);
         await dbContext.SaveChangesAsync();
 
-        return Results.Created($"/bookings/{newBooking.Id}", newBooking);
+        var responseBookingDto = new ResponseBookingDto
+        {
+            Id = newBooking.Id,
+            CreatedAt = newBooking.CreatedAt,
+            Shows = [.. newBooking.Shows.Select(show => new ResponseBookedShowDto
+            {
+                ShowId = show.ShowId,
+                ShowTitle = show.ShowTitle,
+                Seats = [.. show.Seats.Select(seat => new ResponseBookedShowSeatDto
+                {
+                    Line = seat.Line,
+                    Number = seat.Number
+                })]
+            })]
+        };
+
+        return Results.Created($"/bookings/{newBooking.Id}", responseBookingDto);
     }
     catch (Exception)
     {
@@ -109,7 +101,7 @@ group.MapPost("", async (HttpContext context) =>
     }
 })
 .WithName("PostBooking")
-.Produces<BookingModel>(StatusCodes.Status201Created)
+.Produces<ResponseBookingDto>(StatusCodes.Status201Created)
 .ProducesProblem(StatusCodes.Status500InternalServerError)
 .Produces(StatusCodes.Status400BadRequest);
 

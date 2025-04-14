@@ -1,5 +1,5 @@
-using System;
 using Microsoft.EntityFrameworkCore;
+using MyCinebook.ScheduleApiService;
 using MyCinebook.ScheduleData;
 using Scalar.AspNetCore;
 
@@ -27,10 +27,25 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 // Endpoints Mapping
-app.MapGet("/shows", (ScheduleDbContext context) =>
+app.MapGet("/shows", async (ScheduleDbContext context) =>
 {
-    return context.Shows.Include(s => s.Seats).ToListAsync();
+    var shows = await context.ScheduledShow.Include(s => s.Seats).ToListAsync();
+    var response = shows.Select(show => new ResponseScheduledShowDto
+    {
+        ID = show.ID,
+        Title = show.Title,
+        Seats = [.. show.Seats.Select(seat => new ResponseScheduledShowSeatDto
+        {
+            ID = seat.ID,
+            Line = seat.Line,
+            Number = seat.Number
+        })]
+    }).ToList();
+
+    return Results.Ok(response);
 })
-.WithName("GetShows");
+.WithName("GetShows")
+.Produces<ICollection<ResponseScheduledShowDto>>(StatusCodes.Status200OK)
+.ProducesProblem(StatusCodes.Status500InternalServerError);
 
 app.Run();
