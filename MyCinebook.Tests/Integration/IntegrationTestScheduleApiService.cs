@@ -1,9 +1,6 @@
 using System.Text.Json;
-using System.Xml.Linq;
-using Aspire.Hosting;
 using IdentityModel.Client;
 using MyCinebook.TestApiService;
-using static Google.Protobuf.Compiler.CodeGeneratorResponse.Types;
 
 namespace MyCinebook.Tests.Integration;
 
@@ -11,12 +8,13 @@ namespace MyCinebook.Tests.Integration;
 public class IntegrationTestScheduleApiService(TestApplicationFixture fixture)
 {
     private readonly TestApplicationFixture _fixture = fixture;
+    private readonly TimeSpan CancellationTokenTimeOut = TimeSpan.FromSeconds(120);
 
     [Fact]
     public async Task ShouldListScheduledShows()
     {
         // Arrange
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+        using var cts = new CancellationTokenSource(CancellationTokenTimeOut);
         if (_fixture.App == null)
         {
             throw new InvalidOperationException("The application has not been initialized.");

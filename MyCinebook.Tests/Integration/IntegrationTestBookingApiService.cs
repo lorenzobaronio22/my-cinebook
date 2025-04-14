@@ -9,7 +9,7 @@ public class IntegrationTestBookingApiService(TestApplicationFixture fixture)
 {
     private readonly TestApplicationFixture _fixture = fixture;
 
-    private readonly TimeSpan CancellationTokenTimeOut = TimeSpan.FromSeconds(600);
+    private readonly TimeSpan CancellationTokenTimeOut = TimeSpan.FromSeconds(120);
 
     private readonly int FreeShowId = 1;
     private readonly int SoldOutShowId = 2;
