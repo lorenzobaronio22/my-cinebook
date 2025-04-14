@@ -12,6 +12,7 @@ public class IntegrationTestBookingApiService(TestApplicationFixture fixture)
 
     private readonly int FreeShowId = 1;
     private readonly int SoldOutShowId = 2;
+    private readonly int NotExistantShowId = 99;
 
     [Fact]
     public async Task ShouldBookOneSeat()
@@ -77,5 +78,32 @@ public class IntegrationTestBookingApiService(TestApplicationFixture fixture)
 
         var responseBody = await response.Content.ReadAsStringAsync(cts.Token);
         Assert.Contains("sold-out", responseBody);
+    }
+
+    [Fact]
+    public async Task ShouldNotBookShowThatDoesntExists()
+    {
+        // Arrange
+        using var cts = new CancellationTokenSource(CancellationTokenTimeOut);
+        if (_fixture.App == null)
+        {
+            throw new InvalidOperationException("The application has not been initialized.");
+        }
+
+        var httpClient = _fixture.App.CreateHttpClient("bookapiservice");
+        await _fixture.App.ResourceNotifications.WaitForResourceHealthyAsync("bookapiservice", cts.Token);
+
+        // Act
+        var content = JsonContent.Create(new
+        {
+            ShowId = NotExistantShowId
+        });
+        var response = await httpClient.PostAsync("/bookings", content, cts.Token);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var responseBody = await response.Content.ReadAsStringAsync(cts.Token);
+        Assert.Contains("not found", responseBody);
     }
 }
