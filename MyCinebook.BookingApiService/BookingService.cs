@@ -44,6 +44,10 @@ public class BookingService
 
     private static ResponseScheduledShowSeatDto FindAvailableSeat(ResponseScheduledShowDto scheduledShow, RequestBookingDto booking, BookingDbContext dbContext)
     {
+        if (booking?.Seat != null && !scheduledShow.Seats.Any(s => s.Line == booking.Seat.Line && s.Number == booking.Seat.Number))
+        {
+            throw new BookingError($"Seat {booking.Seat.Line}-{booking.Seat.Number} not found in Show {scheduledShow.Title}.");
+        }
         var bookedSeats = dbContext.Booking
             .Where(booking => booking.DeletedAt == null)
             .SelectMany(booking => booking.Shows)

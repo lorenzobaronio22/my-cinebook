@@ -16,10 +16,12 @@ public class IntegrationTestBookingApiService(TestApplicationFixture fixture)
     private readonly int FreeShowId = 1;
     private readonly string FreeSeatLine = "B";
     private readonly int FreeSeatNumber = 1;
-    private readonly string BookedFreeSeatLine = "A";
+    private readonly string BookedSeatLine = "A";
     private readonly int BookedSeatNumber = 1;
     private readonly int SoldOutShowId = 2;
     private readonly int NotExistantShowId = 99;
+    private readonly string NotExistantSeatLine = "X";
+    private readonly int NotExistantSeatNumber = 999;
 
     [Fact]
     public async Task PostBookings_ShouldBookOneSeat_WhenShowIsAvailable()
@@ -174,6 +176,7 @@ public class IntegrationTestBookingApiService(TestApplicationFixture fixture)
         Assert.Equal(FreeSeatNumber, numberProperty.GetInt32());
 
     }
+
     [Fact]
     public async Task PostBookings_ShouldNotBookSpecificSeat_WhenShowIsAvailableButSeatIsAlreadyBooked()
     {
@@ -185,7 +188,7 @@ public class IntegrationTestBookingApiService(TestApplicationFixture fixture)
         var content = JsonContent.Create(new
         {
             ShowId = FreeShowId,
-            Seat = new { Line = BookedFreeSeatLine, Number = BookedSeatNumber }
+            Seat = new { Line = BookedSeatLine, Number = BookedSeatNumber }
         });
         var response = await httpClient.PostAsync("/bookings", content, cts.Token);
 
@@ -194,6 +197,28 @@ public class IntegrationTestBookingApiService(TestApplicationFixture fixture)
 
         var responseBody = await response.Content.ReadAsStringAsync(cts.Token);
         Assert.Contains("not available", responseBody);
+    }
+
+    [Fact]
+    public async Task PostBookings_ShouldNotBookSpecificSeat_WhenShowIsAvailableButSeatDoesNotExists()
+    {
+        // Arrange
+        using var cts = new CancellationTokenSource(CancellationTokenTimeOut);
+        HttpClient httpClient = await InitializeHttpClientForBooking(cts);
+
+        // Act
+        var content = JsonContent.Create(new
+        {
+            ShowId = FreeShowId,
+            Seat = new { Line = NotExistantSeatLine, Number = NotExistantSeatNumber }
+        });
+        var response = await httpClient.PostAsync("/bookings", content, cts.Token);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var responseBody = await response.Content.ReadAsStringAsync(cts.Token);
+        Assert.Contains("not found", responseBody);
     }
 
     private async Task<HttpClient> InitializeHttpClientForBooking(CancellationTokenSource cts)
