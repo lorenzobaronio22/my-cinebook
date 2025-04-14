@@ -20,9 +20,10 @@ public class IntegrationTestBookingApiService(TestApplicationFixture fixture)
     private readonly string BookedSeatLine = "A";
     private readonly int BookedSeatNumber = 1;
     private readonly int SoldOutShowId = 2;
-    private readonly int NotExistantShowId = 99;
+    private readonly int NotExistantShowId = 9999;
     private readonly string NotExistantSeatLine = "X";
-    private readonly int NotExistantSeatNumber = 999;
+    private readonly int NotExistantSeatNumber = 9999;
+    private readonly int NotExistantBooking = 9999;
 
     [Fact]
     public async Task PostBookings_ShouldBookOneSeat_WhenShowIsAvailable()
@@ -294,6 +295,21 @@ public class IntegrationTestBookingApiService(TestApplicationFixture fixture)
         Assert.Equal(testSeatLine, asseertLineProperty.GetString());
         assertSeatObject.TryGetProperty("number", out var assertNumberProperty);
         Assert.Equal(testSeatNumber, assertNumberProperty.GetInt32());
+
+    }
+
+    [Fact]
+    public async Task DeleteBookings_ShouldNotCancelBooking_WhenBookingDoesntExist()
+    {
+        // Arrange
+        using var cts = new CancellationTokenSource(CancellationTokenTimeOut);
+        HttpClient httpClient = await InitializeHttpClientForBooking(cts);
+
+        // Act
+        var response = await httpClient.DeleteAsync($"/bookings/{NotExistantBooking}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
 
     }
 
