@@ -14,12 +14,18 @@
     <PackageReference Include="Aspire.Hosting.Testing" Version="9.2.0" />
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+    <PackageReference Include="MockQueryable.Moq" Version="7.0.3" />
+    <PackageReference Include="Moq" Version="4.20.72" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.0.2" />
     <PackageReference Include="xunit" Version="2.9.3" />
     </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\MyCinebook.AppHost\MyCinebook.AppHost.csproj" />
+    <ProjectReference Include="..\MyCinebook.BookingApiService\MyCinebook.BookingApiService.csproj" />
+    <ProjectReference Include="..\MyCinebook.BookingData\MyCinebook.BookingData.csproj" />
+    <ProjectReference Include="..\MyCinebook.ScheduleApiService\MyCinebook.ScheduleApiService.csproj" />
+    <ProjectReference Include="..\MyCinebook.ScheduleData\MyCinebook.ScheduleData.csproj" />
   </ItemGroup>
 
     <ItemGroup>

@@ -41,3 +41,19 @@ jobs:
 
     needs:
     - call-build-and-test
+
+  call-publish-booking-api:
+    uses: ./.github/workflows/publish-ghcr.yml
+
+    with:
+      docker-file-path: MyCinebook.BookingApiService/Dockerfile
+      docker-image-name: my-cinebook-booking-api
+
+    permissions:
+      packages: write
+      contents: read
+      attestations: write
+      id-token: write
+
+    needs:
+    - call-build-and-test

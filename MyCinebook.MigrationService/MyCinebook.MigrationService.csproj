@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MyCinebook.BookingData\MyCinebook.BookingData.csproj" />
     <ProjectReference Include="..\MyCinebook.ScheduleData\MyCinebook.ScheduleData.csproj" />
     <ProjectReference Include="..\MyCinebook.ServiceDefaults\MyCinebook.ServiceDefaults.csproj" />
   </ItemGroup>

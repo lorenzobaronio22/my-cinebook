@@ -3,18 +3,29 @@ using MyCinebook.AppHost;
 var builder = DistributedApplication.CreateBuilder(args);
 
 var postgresServer = builder.AddPostgres("postgreSQLServer")
-    .WithPgAdmin();
+    //.WithPgAdmin()
+;
 
 var scheduleDatabase = postgresServer.AddDatabase("schedule");
-
-builder.AddProject<Projects.MyCinebook_ScheduleApiService>("scheduleapiservice")
-    .WithHttpsHealthCheck("/health")
-    .WithScalar()
-    .WithReference(scheduleDatabase);
+var bookingDatabase = postgresServer.AddDatabase("booking");
 
 builder.AddProject<Projects.MyCinebook_MigrationService>("migrationservice")
     .WithReference(postgresServer)
     .WithReference(scheduleDatabase)
-    .WaitFor(postgresServer);
+    .WithReference(bookingDatabase)
+    .WaitFor(postgresServer)
+    .WaitFor(scheduleDatabase)
+    .WaitFor(bookingDatabase);
+
+var scheduleApiService = builder.AddProject<Projects.MyCinebook_ScheduleApiService>("scheduleapiservice")
+    .WithHttpsHealthCheck("/health")
+    .WithScalar()
+    .WithReference(scheduleDatabase);
+
+builder.AddProject<Projects.MyCinebook_BookingApiService>("bookapiservice")
+    .WithHttpsHealthCheck("/health")
+    .WithScalar()
+    .WithReference(bookingDatabase)
+    .WithReference(scheduleApiService);
 
 builder.Build().Run();
