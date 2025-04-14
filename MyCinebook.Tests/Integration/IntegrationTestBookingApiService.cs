@@ -1,6 +1,7 @@
 ﻿using System.Net.Http.Json;
 using System.Text.Json;
 using IdentityModel.Client;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using MyCinebook.TestApiService;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -19,9 +20,10 @@ public class IntegrationTestBookingApiService(TestApplicationFixture fixture)
     private readonly string BookedSeatLine = "A";
     private readonly int BookedSeatNumber = 1;
     private readonly int SoldOutShowId = 2;
-    private readonly int NotExistantShowId = 99;
+    private readonly int NotExistantShowId = 9999;
     private readonly string NotExistantSeatLine = "X";
-    private readonly int NotExistantSeatNumber = 999;
+    private readonly int NotExistantSeatNumber = 9999;
+    private readonly int NotExistantBooking = 9999;
 
     [Fact]
     public async Task PostBookings_ShouldBookOneSeat_WhenShowIsAvailable()
@@ -242,6 +244,73 @@ public class IntegrationTestBookingApiService(TestApplicationFixture fixture)
 
         var responseBody = await response.Content.ReadAsStringAsync(cts.Token);
         Assert.Contains("Show not found", responseBody);
+    }
+    [Fact]
+    public async Task DeleteBookings_ShouldInvalidateBookingAndFreeSeats_WhenBookingIsValid()
+    {
+        // Arrange
+        using var cts = new CancellationTokenSource(CancellationTokenTimeOut);
+        HttpClient httpClient = await InitializeHttpClientForBooking(cts);
+
+        var arrangeContent = JsonContent.Create(new
+        {
+            ShowId = FreeShowId,
+        });
+        var arrangeResponse = await httpClient.PostAsync("/bookings", arrangeContent, cts.Token);
+        var arrangeResponseBody = await arrangeResponse.Content.ReadAsStringAsync(cts.Token);
+        var arrangeJsonObject = JsonSerializer.Deserialize<JsonElement>(arrangeResponseBody);
+        arrangeJsonObject.TryGetProperty("id", out var propertyBookingId);
+        int testBookingId = propertyBookingId.GetInt32();
+        arrangeJsonObject.TryGetProperty("shows", out var showsProperty);
+        var arrangeShowObject = showsProperty[0];
+        arrangeShowObject.TryGetProperty("seat", out var seatProperty);
+        var arrangeSeatObject = seatProperty;
+        arrangeSeatObject.TryGetProperty("line", out var lineProperty);
+        string testSeatLine = lineProperty.GetString() ?? throw new Exception("missing testSeatLine");
+        arrangeSeatObject.TryGetProperty("number", out var numberProperty);
+        int testSeatNumber = numberProperty.GetInt32();
+
+        // Act
+        var response = await httpClient.DeleteAsync($"/bookings/{testBookingId}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+        var assertContent = JsonContent.Create(new
+        {
+            ShowId = FreeShowId,
+            Seat = new { Line = testSeatLine, Number = testSeatNumber }
+        });
+        var assertResponse = await httpClient.PostAsync("/bookings", assertContent, cts.Token);
+        Assert.Equal(HttpStatusCode.Created, assertResponse.StatusCode);
+        var assertResponseBody = await assertResponse.Content.ReadAsStringAsync(cts.Token);
+        var assertJsonObject = JsonSerializer.Deserialize<JsonElement>(assertResponseBody);
+        assertJsonObject.TryGetProperty("id", out var assertPropertyBookingId);
+        Assert.NotEqual(testBookingId, assertPropertyBookingId.GetInt32());
+        assertJsonObject.TryGetProperty("shows", out var assertShowsProperty);
+        var assertShowObject = assertShowsProperty[0];
+        assertShowObject.TryGetProperty("seat", out var assertSeatProperty);
+        var assertSeatObject = assertSeatProperty;
+        assertSeatObject.TryGetProperty("line", out var asseertLineProperty);
+        Assert.Equal(testSeatLine, asseertLineProperty.GetString());
+        assertSeatObject.TryGetProperty("number", out var assertNumberProperty);
+        Assert.Equal(testSeatNumber, assertNumberProperty.GetInt32());
+
+    }
+
+    [Fact]
+    public async Task DeleteBookings_ShouldNotCancelBooking_WhenBookingDoesntExist()
+    {
+        // Arrange
+        using var cts = new CancellationTokenSource(CancellationTokenTimeOut);
+        HttpClient httpClient = await InitializeHttpClientForBooking(cts);
+
+        // Act
+        var response = await httpClient.DeleteAsync($"/bookings/{NotExistantBooking}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
     }
 
     private async Task<HttpClient> InitializeHttpClientForBooking(CancellationTokenSource cts)

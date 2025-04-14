@@ -163,6 +163,42 @@ public class BookingServiceTests
         _mockDbContext.Verify(db => db.SaveChanges(), Times.Once);
     }
 
+    [Fact]
+    public async Task DeleteBooking_ShouldDeleteBooking_WhenBookingExists()
+    {
+        // Arrange
+        var bookingId = 1;
+        var booking = new Booking { Id = bookingId, CreatedAt = DateTime.UtcNow, Shows = new List<BookedShow>() };
+
+        _mockBookingDbSet.Setup(m => m.FindAsync(bookingId))
+            .ReturnsAsync(booking);
+
+        _mockDbContext.Setup(db => db.Booking).Returns(_mockBookingDbSet.Object);
+
+        // Act
+        await BookingService.DeleteBooking(bookingId, _mockDbContext.Object);
+
+        // Assert
+        Assert.NotNull(booking.DeletedAt);
+        _mockDbContext.Verify(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteBooking_ShouldThrowBookingError_WhenBookingDoesNotExist()
+    {
+        // Arrange
+        var bookingId = 99;
+
+        _mockBookingDbSet.Setup(m => m.FindAsync(bookingId))
+            .ReturnsAsync(value: null);
+
+        _mockDbContext.Setup(db => db.Booking).Returns(_mockBookingDbSet.Object);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<BookingError>(() =>
+            BookingService.DeleteBooking(bookingId, _mockDbContext.Object));
+    }
+
     private void SetupMockBookingDbSet(IQueryable<Booking> data)
     {
         _mockBookingDbSet.As<IQueryable<Booking>>().Setup(m => m.Provider).Returns(data.Provider);
