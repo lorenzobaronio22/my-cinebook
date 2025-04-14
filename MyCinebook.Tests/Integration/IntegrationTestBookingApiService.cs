@@ -118,7 +118,7 @@ public class IntegrationTestBookingApiService(TestApplicationFixture fixture)
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
         var responseBody = await response.Content.ReadAsStringAsync(cts.Token);
-        Assert.Contains("not found", responseBody);
+        Assert.Contains("Show not found", responseBody);
     }
 
     [Fact]
@@ -218,7 +218,30 @@ public class IntegrationTestBookingApiService(TestApplicationFixture fixture)
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
         var responseBody = await response.Content.ReadAsStringAsync(cts.Token);
+        Assert.Contains("Seat", responseBody);
         Assert.Contains("not found", responseBody);
+    }
+
+    [Fact]
+    public async Task PostBookings_ShouldNotBookSpecificSeat_WhenShowDoesNotExist()
+    {
+        // Arrange
+        using var cts = new CancellationTokenSource(CancellationTokenTimeOut);
+        HttpClient httpClient = await InitializeHttpClientForBooking(cts);
+
+        // Act
+        var content = JsonContent.Create(new
+        {
+            ShowId = NotExistantShowId,
+            Seat = new { Line = "A", Number = 1 }
+        });
+        var response = await httpClient.PostAsync("/bookings", content, cts.Token);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var responseBody = await response.Content.ReadAsStringAsync(cts.Token);
+        Assert.Contains("Show not found", responseBody);
     }
 
     private async Task<HttpClient> InitializeHttpClientForBooking(CancellationTokenSource cts)
