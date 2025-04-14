@@ -17,11 +17,11 @@ public class BookingService
                 {
                     ShowId = show.ShowId,
                     ShowTitle = show.ShowTitle,
-                    Seats = [.. show.Seats.Select(seat => new ResponseBookedShowSeatDto
+                    Seat = show.Seats.Select(seat => new ResponseBookedShowSeatDto
                     {
                         Line = seat.Line,
                         Number = seat.Number
-                    })]
+                    }).First()
                 })]
         };
     }
@@ -30,7 +30,7 @@ public class BookingService
     {
         var matchingShow = await FindShow(booking, scheduleClient);
 
-        var availableSeat = FindAvailableSeat(matchingShow, dbContext);
+        var availableSeat = FindAvailableSeat(matchingShow, booking, dbContext);
 
         return SaveBooking(matchingShow, availableSeat, dbContext);
     }
@@ -42,7 +42,7 @@ public class BookingService
         return matchingShow ?? throw new BookingError("Show not found.");
     }
 
-    private static ResponseScheduledShowSeatDto FindAvailableSeat(ResponseScheduledShowDto scheduledShow, BookingDbContext dbContext)
+    private static ResponseScheduledShowSeatDto FindAvailableSeat(ResponseScheduledShowDto scheduledShow, RequestBookingDto booking, BookingDbContext dbContext)
     {
         var bookedSeats = dbContext.Booking
             .Where(booking => booking.DeletedAt == null)
@@ -51,11 +51,22 @@ public class BookingService
             .SelectMany(show => show.Seats)
             .ToList();
 
-        var availableSeat = scheduledShow.Seats
-            .FirstOrDefault(seat => !bookedSeats.Any(bookedSeat =>
-                bookedSeat.Line == seat.Line && bookedSeat.Number == seat.Number));
+        var availableSeats = scheduledShow.Seats
+            .Where(seat => !bookedSeats.Any(bookedSeat => bookedSeat.Line == seat.Line && bookedSeat.Number == seat.Number))
+            .ToList();
 
-        return availableSeat ?? throw new BookingError($"Show ${scheduledShow.Title} is sold-out.");
+        if (availableSeats == null || availableSeats.Count < 1) { 
+            throw new BookingError($"Show {scheduledShow.Title} is sold-out.");
+        }
+
+        if (booking?.Seat == null)
+        {
+            return availableSeats.First();
+        }
+
+        var availableSpecificSeat = availableSeats
+            .FirstOrDefault(seat => seat.Line == booking.Seat.Line && seat.Number == booking.Seat.Number);
+        return availableSpecificSeat ?? throw new BookingError($"Seat {booking.Seat.Line}-{booking.Seat.Number} in Show {scheduledShow.Title} is not availabel.");
     }
 
     private static Booking SaveBooking(ResponseScheduledShowDto scheduledShow, ResponseScheduledShowSeatDto seatToReseve, BookingDbContext dbContext) {

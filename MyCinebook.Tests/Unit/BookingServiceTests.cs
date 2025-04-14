@@ -22,10 +22,9 @@ public class BookingServiceTests
     }
 
     [Fact]
-    public async Task SaveBooking_ShouldSaveBooking_WhenShowAndSeatAreAvailable()
+    public async Task SaveBooking_ShouldSaveBooking_WhenShowIsAvailable()
     {
         // Arrange
-        var requestBookingDto = new RequestBookingDto { ShowId = 1 };
         var scheduledShow = new ResponseScheduledShowDto
         {
             ID = 1,
@@ -45,11 +44,14 @@ public class BookingServiceTests
         SetupMockBookingDbSet(data);
 
         // Act
+        var requestBookingDto = new RequestBookingDto { ShowId = 1 };
         var result = await BookingService.SaveBooking(requestBookingDto, _mockScheduleClient.Object, _mockDbContext.Object);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(1, result.Shows.First().ShowId);
+        Assert.Equal("A", result.Shows.First().Seats.First().Line);
+        Assert.Equal(1, result.Shows.First().Seats.First().Number);
         _mockDbContext.Verify(db => db.SaveChanges(), Times.Once);
     }
 
@@ -57,8 +59,6 @@ public class BookingServiceTests
     public async Task SaveBooking_ShouldThrowBookingError_WhenShowNotFound()
     {
         // Arrange
-        var requestBookingDto = new RequestBookingDto { ShowId = 99 };
-
         _mockScheduleClient
             .Setup(client => client.GetShowsAsync())
             .ReturnsAsync([]);
@@ -66,6 +66,7 @@ public class BookingServiceTests
         _mockDbContext.Setup(db => db.Booking).Returns(_mockBookingDbSet.Object);
 
         // Act & Assert
+        var requestBookingDto = new RequestBookingDto { ShowId = 99 };
         await Assert.ThrowsAsync<BookingError>(() =>
             BookingService.SaveBooking(requestBookingDto, _mockScheduleClient.Object, _mockDbContext.Object));
     }
@@ -108,6 +109,58 @@ public class BookingServiceTests
         // Act & Assert
         await Assert.ThrowsAsync<BookingError>(() =>
             BookingService.SaveBooking(requestBookingDto, _mockScheduleClient.Object, _mockDbContext.Object));
+    }
+
+    [Fact]
+    public async Task SaveBooking_ShouldSaveBooking_WhenShowAndSeatAreAvailable()
+    {
+        // Arrange
+        var scheduledShow = new ResponseScheduledShowDto
+        {
+            ID = 1,
+            Title = "Test Show",
+            Seats =
+            [
+                new ResponseScheduledShowSeatDto { Line = "A", Number = 1 },
+                new ResponseScheduledShowSeatDto { Line = "A", Number = 2 },
+                new ResponseScheduledShowSeatDto { Line = "B", Number = 1 },
+            ]
+        };
+
+        _mockScheduleClient
+            .Setup(client => client.GetShowsAsync())
+            .ReturnsAsync([scheduledShow]);
+
+        var booking = new Booking { Shows = [] };
+        var bookedShow = new BookedShow
+        {
+            ShowId = 1,
+            ShowTitle = "Test Show",
+            Booking = booking,
+            Seats = []
+        };
+        var bookedShowSeat = new BookedShowSeat { Line = "A", Number = 1, BookedShow = bookedShow };
+        bookedShow.Seats.Add(bookedShowSeat);
+        booking.Shows.Add(bookedShow);
+
+        var data = new List<Booking> { booking }.AsQueryable();
+
+        SetupMockBookingDbSet(data);
+
+        // Act
+        var requestBookingDto = new RequestBookingDto
+        {
+            ShowId = 1,
+            Seat = new RequestBookingSeatDto { Line = "B", Number = 1 }
+        };
+        var result = await BookingService.SaveBooking(requestBookingDto, _mockScheduleClient.Object, _mockDbContext.Object);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(1, result.Shows.First().ShowId);
+        Assert.Equal("B", result.Shows.First().Seats.First().Line);
+        Assert.Equal(1, result.Shows.First().Seats.First().Number);
+        _mockDbContext.Verify(db => db.SaveChanges(), Times.Once);
     }
 
     private void SetupMockBookingDbSet(IQueryable<Booking> data)
