@@ -1,8 +1,5 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using MyCinebook.BookingApiService;
 using MyCinebook.BookingData;
-using MyCinebook.BookingData.Models;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);

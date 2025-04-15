@@ -1,5 +1,5 @@
-﻿using MyCinebook.BookingApiService.Dtos;
-using MyCinebook.BookingApiService.Exceptions;
+﻿using Microsoft.EntityFrameworkCore;
+using MyCinebook.BookingApiService.Dtos;
 using MyCinebook.BookingData;
 using MyCinebook.BookingData.Models;
 
@@ -35,21 +35,29 @@ public class BookingService
         return SaveBooking(matchingShow, availableSeat, dbContext);
     }
 
+    public static async Task<ICollection<Booking>> FindBookingByShow(int showId, BookingDbContext dbContext)
+    {
+        var bookings = await dbContext.Booking
+            .Where(b => b.DeletedAt == null)
+            .Include(b => b.Shows)
+            .ThenInclude(s => s.Seats)
+            .Where(b => b.Shows.Any(s => s.ShowId == showId))
+            .ToListAsync();
+
+        return bookings;
+    }
+
     private static async Task<ResponseScheduledShowDto> FindShow(RequestBookingDto booking, IScheduleClient scheduleClient)
     {
         var shows = await scheduleClient.GetShowsAsync();
         var matchingShow = shows.FirstOrDefault(show => show.ID == booking.ShowId);
-        return matchingShow ?? throw new BookingError("Show not found.");
+        return matchingShow ?? throw new ArgumentException("Show not found.");
     }
 
     public static async Task DeleteBooking(int id, BookingDbContext dbContext)
     {
-        // DONT COMMMIT
-        if (id == 42) throw new Exception("Test Produce Problem");
-        // DONT COMMIT
-
         var booking = await dbContext.Booking.FindAsync(id)
-            ?? throw new BookingError($"Booking {id} not found.");
+            ?? throw new ArgumentException($"Booking {id} not found.");
 
         booking.DeletedAt = DateTime.UtcNow;
         await dbContext.SaveChangesAsync();
@@ -59,7 +67,7 @@ public class BookingService
     {
         if (booking?.Seat != null && !scheduledShow.Seats.Any(s => s.Line == booking.Seat.Line && s.Number == booking.Seat.Number))
         {
-            throw new BookingError($"Seat {booking.Seat.Line}-{booking.Seat.Number} not found in Show {scheduledShow.Title}.");
+            throw new ArgumentException($"Seat {booking.Seat.Line}-{booking.Seat.Number} not found in Show {scheduledShow.Title}.");
         }
         var bookedSeats = dbContext.Booking
             .Where(booking => booking.DeletedAt == null)
@@ -73,7 +81,7 @@ public class BookingService
             .ToList();
 
         if (availableSeats == null || availableSeats.Count < 1) { 
-            throw new BookingError($"Show {scheduledShow.Title} is sold-out.");
+            throw new ArgumentException($"Show {scheduledShow.Title} is sold-out.");
         }
 
         if (booking?.Seat == null)
@@ -83,7 +91,7 @@ public class BookingService
 
         var availableSpecificSeat = availableSeats
             .FirstOrDefault(seat => seat.Line == booking.Seat.Line && seat.Number == booking.Seat.Number);
-        return availableSpecificSeat ?? throw new BookingError($"Seat {booking.Seat.Line}-{booking.Seat.Number} in Show {scheduledShow.Title} is not available.");
+        return availableSpecificSeat ?? throw new ArgumentException($"Seat {booking.Seat.Line}-{booking.Seat.Number} in Show {scheduledShow.Title} is not available.");
     }
 
     private static Booking SaveBooking(ResponseScheduledShowDto scheduledShow, ResponseScheduledShowSeatDto seatToReseve, BookingDbContext dbContext) {
