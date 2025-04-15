@@ -19,13 +19,19 @@ builder.AddProject<Projects.MyCinebook_MigrationService>("migrationservice")
 
 var scheduleApiService = builder.AddProject<Projects.MyCinebook_ScheduleApiService>("scheduleapiservice")
     .WithHttpsHealthCheck("/health")
-    .WithScalar()
-    .WithReference(scheduleDatabase);
+    .WithScalar();
 
-builder.AddProject<Projects.MyCinebook_BookingApiService>("bookapiservice")
+var bookingApiService = builder.AddProject<Projects.MyCinebook_BookingApiService>("bookapiservice")
     .WithHttpsHealthCheck("/health")
-    .WithScalar()
+    .WithScalar();
+
+scheduleApiService
+    .WithReference(scheduleDatabase)
+    .WithReference(bookingApiService);
+
+bookingApiService
     .WithReference(bookingDatabase)
     .WithReference(scheduleApiService);
+
 
 builder.Build().Run();
