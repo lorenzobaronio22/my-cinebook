@@ -1,9 +1,8 @@
 ﻿using MyCinebook.BookingApiService.Dtos;
 
-namespace MyCinebook.BookingApiService
+namespace MyCinebook.BookingApiService;
+
+public interface IScheduleClient
 {
-    public interface IScheduleClient
-    {
-        Task<IEnumerable<ResponseScheduledShowDto>> GetShowsAsync();
-    }
+    Task<IEnumerable<ResponseScheduledShowDto>> GetShowsAsync();
 }

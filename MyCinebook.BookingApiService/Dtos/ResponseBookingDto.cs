@@ -1,6 +1,4 @@
-﻿using MyCinebook.BookingData.Models;
-
-namespace MyCinebook.BookingApiService.Dtos;
+﻿namespace MyCinebook.BookingApiService.Dtos;
 
 public class ResponseBookingDto
 {
