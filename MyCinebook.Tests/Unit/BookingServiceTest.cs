@@ -2,10 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Moq;
 using MyCinebook.BookingApiService;
 using MyCinebook.BookingApiService.Dtos;
-using MyCinebook.BookingApiService.Exceptions;
 using MyCinebook.BookingData;
 using MyCinebook.BookingData.Models;
-using MyCinebook.ScheduleData.Models;
 
 namespace MyCinebook.Tests.Unit;
 
@@ -45,7 +43,7 @@ public class BookingServiceTest
 
         // Act & Assert
         var requestBookingDto = new RequestBookingDto { ShowId = 99 };
-        await Assert.ThrowsAsync<BookingError>(() =>
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             BookingService.SaveBooking(requestBookingDto, scheduleClientMock.Object, _dbContext));
     }
 
@@ -83,7 +81,7 @@ public class BookingServiceTest
 
         // Act & Assert
         var requestBookingDto = new RequestBookingDto { ShowId = 1 };
-        await Assert.ThrowsAsync<BookingError>(() =>
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             BookingService.SaveBooking(requestBookingDto, scheduleClientMock.Object, _dbContext));
     }
 
@@ -167,8 +165,94 @@ public class BookingServiceTest
         BookingDbContext _dbContext = InitDBContext("SaveBooking_ShouldSaveBooking_WhenShowIsAvailable");
 
         // Act & Assert
-        await Assert.ThrowsAsync<BookingError>(() =>
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             BookingService.DeleteBooking(99, _dbContext));
+    }
+
+    [Fact]
+    public async Task FindBookingByShow_ShouldReturnOnlyBookingForThatShow_WhenShowItsBeenBooked()
+    {
+        var booking1 = new Booking { Shows = [] };
+        var bookedShow1 = new BookedShow
+        {
+            ShowId = 1,
+            ShowTitle = "Test Show 1",
+            Seats = [],
+            Booking = booking1
+        };
+        booking1.Shows.Add(bookedShow1);
+        var bookedShowSeat1 = new BookedShowSeat
+        {
+            Line = "A",
+            Number = 1,
+            BookedShow = bookedShow1
+        };
+        bookedShow1.Seats.Add(bookedShowSeat1);
+        var bookedShow2 = new BookedShow
+        {
+            ShowId = 2,
+            ShowTitle = "Test Show 2",
+            Seats = [],
+            Booking = booking1
+        };
+        booking1.Shows.Add(bookedShow2);
+        var bookedShowSeat2 = new BookedShowSeat
+        {
+            Line = "A",
+            Number = 1,
+            BookedShow = bookedShow2
+        };
+        bookedShow2.Seats.Add(bookedShowSeat2);
+
+        var booking2 = new Booking { Shows = [] };
+        var bookedShow1booking2 = new BookedShow
+        {
+            ShowId = 1,
+            ShowTitle = "Test Show 1",
+            Seats = [],
+            Booking = booking2
+        };
+        booking2.Shows.Add(bookedShow1booking2);
+        var bookedShowSeat2booking2 = new BookedShowSeat
+        {
+            Line = "A",
+            Number = 2,
+            BookedShow = bookedShow1booking2
+        };
+        bookedShow1booking2.Seats.Add(bookedShowSeat2booking2);
+
+        var booking3 = new Booking { Shows = [] };
+        var bookedShow2booking3 = new BookedShow
+        {
+            ShowId = 2,
+            ShowTitle = "Test Show 2",
+            Seats = [],
+            Booking = booking3
+        };
+        booking3.Shows.Add(bookedShow2booking3);
+        var bookedShowSeat2booking3 = new BookedShowSeat
+        {
+            Line = "A",
+            Number = 2,
+            BookedShow = bookedShow2booking3
+        };
+        bookedShow2booking3.Seats.Add(bookedShowSeat2booking3);
+
+        BookingDbContext _dbContext = InitDBContext("FindBookingByShow_ShouldReturnOnlyBookingForThatShow_WhenShowItsBeenBooked");
+        _dbContext.Booking.Add(booking1);
+        _dbContext.Booking.Add(booking2);
+        _dbContext.Booking.Add(booking3);
+        await _dbContext.SaveChangesAsync();
+
+        // Act
+        var result = await BookingService.FindBookingByShow(1, _dbContext);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Count);
+        Assert.Contains(result, booking => booking.Id == booking1.Id);
+        Assert.Contains(result, booking => booking.Id == booking2.Id);
+        Assert.DoesNotContain(result, booking => booking.Id == booking3.Id);
     }
 
     private static BookingDbContext InitDBContext(string databaseName)
@@ -182,11 +266,11 @@ public class BookingServiceTest
 
     private static Mock<IScheduleClient> SetupScheduleClientMock(ICollection<ResponseScheduledShowDto> response)
     {
-        var scheduleClientMock = new Mock<IScheduleClient>();
-        scheduleClientMock
+        var clientMock = new Mock<IScheduleClient>();
+        clientMock
             .Setup(client => client.GetShowsAsync())
             .ReturnsAsync(response);
-        return scheduleClientMock;
+        return clientMock;
     }
 
 }

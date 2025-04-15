@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using MyCinebook.ScheduleApiService;
 using MyCinebook.ScheduleData;
 using Scalar.AspNetCore;
@@ -12,6 +11,9 @@ builder.AddServiceDefaults();
 builder.Services.AddOpenApi();
 
 builder.AddNpgsqlDbContext<ScheduleDbContext>(connectionName: "schedule");
+
+builder.Services.AddHttpClient<BookingClient>(
+    static client => client.BaseAddress = new("http+https://bookapiservice"));
 
 var app = builder.Build();
 

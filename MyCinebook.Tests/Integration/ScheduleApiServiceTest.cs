@@ -11,6 +11,7 @@ public class ScheduleApiServiceTest(TestApplicationFixture fixture)
     private readonly TimeSpan CancellationTokenTimeOut = TimeSpan.FromSeconds(120);
 
     private readonly int ShowIdInSchedule = 1;
+    private readonly int ShowIdNotInSchedule = 99;
 
     [Fact]
     public async Task GetShows_ShouldListScheduledShows_WhenThereAreShowsInTheSchedule()
@@ -41,11 +42,12 @@ public class ScheduleApiServiceTest(TestApplicationFixture fixture)
         var firstElementactualSeats = firstElementseatsProperty.EnumerateArray()
             .Select(seat =>
             {
-                return $"{seat.TryGetString("line")}-{seat.TryGetInt("number")}";
+                var line = seat.GetProperty("line").GetString();
+                var number = seat.GetProperty("number").GetInt32();
+                return $"{line}-{number}";
             })
             .ToArray();
         Assert.Equal(firstElementexpectedSeats, firstElementactualSeats);
-
 
         var secondElement = jsonArray[1];
         Assert.True(secondElement.TryGetProperty("title", out var secondTitleProperty), "Second element does not have a 'title' property.");
@@ -57,7 +59,9 @@ public class ScheduleApiServiceTest(TestApplicationFixture fixture)
         var secondElemenActualSeats = secondElementseatsProperty.EnumerateArray()
             .Select(seat =>
             {
-                return $"{seat.TryGetString("line")}-{seat.TryGetInt("number")}";
+                var line = seat.GetProperty("line").GetString();
+                var number = seat.GetProperty("number").GetInt32();
+                return $"{line}-{number}";
             })
             .ToArray();
         Assert.Equal(secondElemenExpectedSeats, secondElemenActualSeats);
@@ -75,6 +79,31 @@ public class ScheduleApiServiceTest(TestApplicationFixture fixture)
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var responseBody = await response.Content.ReadAsStringAsync(cts.Token);
+        var jsonArray = JsonSerializer.Deserialize<JsonElement>(responseBody);
+
+        Assert.True(jsonArray.ValueKind == JsonValueKind.Array, "Response body is not a JSON array.");
+
+        foreach (var element in jsonArray.EnumerateArray())
+        {
+            Assert.True(element.TryGetProperty("available", out var availableProperty), "Element does not contain an 'Available' attribute.");
+            Assert.True(availableProperty.ValueKind == JsonValueKind.True || availableProperty.ValueKind == JsonValueKind.False, "The 'Available' attribute is not of type boolean.");
+        }
+    }
+
+    [Fact]
+    public async Task GetShowSeatsAvailability_ShouldReturnError_WhenShowIsNotInSchedule()
+    {
+        // Arrange
+        using var cts = new CancellationTokenSource(CancellationTokenTimeOut);
+        var httpClient = await InitializeHttpClientForSchedule(cts);
+
+        // Act
+        var response = await httpClient.GetAsync($"/shows/{ShowIdNotInSchedule}/seats/availability", cts.Token);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
 
     }
 

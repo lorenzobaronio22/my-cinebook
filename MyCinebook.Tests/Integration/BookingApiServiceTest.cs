@@ -310,6 +310,44 @@ public class BookingApiServiceTest(TestApplicationFixture fixture)
 
     }
 
+    [Fact]
+    public async Task GetBookings_ShouldReturnOnlyBookingForThatShow_WhenFilterByShowId()
+    {
+        // Arrange  
+        using var cts = new CancellationTokenSource(CancellationTokenTimeOut);
+        HttpClient httpClient = await InitializeHttpClientForBooking(cts);
+
+        // Act  
+        var response = await httpClient.GetAsync($"/bookings?showId={FreeShowId}");
+
+        // Assert  
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var responseBody = await response.Content.ReadAsStringAsync(cts.Token);
+        var jsonArray = JsonSerializer.Deserialize<JsonElement>(responseBody);
+
+        Assert.True(jsonArray.ValueKind == JsonValueKind.Array, "Response body is not a JSON array.");
+
+        foreach (var element in jsonArray.EnumerateArray())
+        {
+            Assert.True(element.TryGetProperty("shows", out var showsProperty), "Element does not contain a 'shows' attribute.");
+            Assert.Equal(JsonValueKind.Array, showsProperty.ValueKind);
+
+            bool hasMatchingShowId = false;
+            foreach (var show in showsProperty.EnumerateArray())
+            {
+                Assert.True(show.TryGetProperty("showId", out var showIdProperty), "Show object does not contain a 'showId' attribute.");
+                Assert.Equal(JsonValueKind.Number, showIdProperty.ValueKind);
+
+                if (showIdProperty.GetInt32() == FreeShowId)
+                {
+                    hasMatchingShowId = true;
+                    break;
+                }
+            }
+            Assert.True(hasMatchingShowId, $"No 'showId' in the 'shows' array matches the value of FreeShowId ({FreeShowId}).");
+        }
+    }
+
     private async Task<HttpClient> InitializeHttpClientForBooking(CancellationTokenSource cts)
     {
         if (_fixture.App == null)
