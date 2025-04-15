@@ -5,7 +5,7 @@ namespace MyCinebook.ScheduleData;
 
 public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : DbContext(options)
 {
-    public DbSet<ScheduledShow> ScheduledShow { get; set; }
-    public DbSet<ScheduledShowSeat> ScheduledShowSeat { get; set; }
+    public virtual DbSet<ScheduledShow> ScheduledShow { get; set; }
+    public virtual DbSet<ScheduledShowSeat> ScheduledShowSeat { get; set; }
 
 }

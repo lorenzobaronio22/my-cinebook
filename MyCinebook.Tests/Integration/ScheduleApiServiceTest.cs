@@ -5,23 +5,19 @@ using MyCinebook.TestApiService;
 namespace MyCinebook.Tests.Integration;
 
 [Collection("TestApplicationCollection")]
-public class IntegrationTestScheduleApiService(TestApplicationFixture fixture)
+public class ScheduleApiServiceTest(TestApplicationFixture fixture)
 {
     private readonly TestApplicationFixture _fixture = fixture;
     private readonly TimeSpan CancellationTokenTimeOut = TimeSpan.FromSeconds(120);
 
+    private readonly int ShowIdInSchedule = 1;
+
     [Fact]
-    public async Task ShouldListScheduledShows()
+    public async Task GetShows_ShouldListScheduledShows_WhenThereAreShowsInTheSchedule()
     {
         // Arrange
         using var cts = new CancellationTokenSource(CancellationTokenTimeOut);
-        if (_fixture.App == null)
-        {
-            throw new InvalidOperationException("The application has not been initialized.");
-        }
-
-        var httpClient = _fixture.App.CreateHttpClient("scheduleapiservice");
-        await _fixture.App.ResourceNotifications.WaitForResourceHealthyAsync("scheduleapiservice", cts.Token);
+        var httpClient = await InitializeHttpClientForSchedule(cts);
 
         // Act
         var response = await httpClient.GetAsync("/shows", cts.Token);
@@ -65,5 +61,32 @@ public class IntegrationTestScheduleApiService(TestApplicationFixture fixture)
             })
             .ToArray();
         Assert.Equal(secondElemenExpectedSeats, secondElemenActualSeats);
+    }
+
+    [Fact]
+    public async Task GetShowsSeatsAvailability_ShouldListShowSeatsWithAvailabilityStatus_WhenShowIsInSchedule()
+    {
+        // Arrange
+        using var cts = new CancellationTokenSource(CancellationTokenTimeOut);
+        var httpClient = await InitializeHttpClientForSchedule(cts);
+
+        // Act
+        var response = await httpClient.GetAsync($"/shows/{ShowIdInSchedule}/seats/availability", cts.Token);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+    }
+
+    private async Task<HttpClient> InitializeHttpClientForSchedule(CancellationTokenSource cts)
+    {
+        if (_fixture.App == null)
+        {
+            throw new InvalidOperationException("The application has not been initialized.");
+        }
+
+        var httpClient = _fixture.App.CreateHttpClient("scheduleapiservice");
+        await _fixture.App.ResourceNotifications.WaitForResourceHealthyAsync("scheduleapiservice", cts.Token);
+        return httpClient;
     }
 }

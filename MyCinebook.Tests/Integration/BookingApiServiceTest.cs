@@ -1,14 +1,11 @@
 ﻿using System.Net.Http.Json;
 using System.Text.Json;
-using IdentityModel.Client;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using MyCinebook.TestApiService;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MyCinebook.Tests.Integration;
 
 [Collection("TestApplicationCollection")]
-public class IntegrationTestBookingApiService(TestApplicationFixture fixture)
+public class BookingApiServiceTest(TestApplicationFixture fixture)
 {
     private readonly TestApplicationFixture _fixture = fixture;
 
